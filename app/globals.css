@@ -1,0 +1,73 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 215, 255, 233;
+  --background-rgb: 3, 6, 4;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  color: rgb(var(--foreground-rgb));
+  background: rgb(var(--background-rgb));
+  font-feature-settings: "ss01" on;
+}
+
+body {
+  overflow-x: hidden;
+}
+
+.oscilloscope-stage {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background: radial-gradient(circle at top, rgba(18, 24, 40, 0.4), rgba(3, 6, 10, 0.95));
+}
+
+.oscilloscope-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.oscilloscope-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(rgba(12, 16, 24, 0.22), rgba(12, 16, 24, 0.22)),
+    repeating-linear-gradient(
+      to bottom,
+      rgba(44, 60, 92, 0.08) 0px,
+      rgba(44, 60, 92, 0.08) 2px,
+      rgba(8, 12, 22, 0.22) 3px,
+      rgba(8, 12, 22, 0.22) 4px
+    );
+  mix-blend-mode: screen;
+}
+
+.scroll-spacer {
+  position: relative;
+  height: 600vh;
+  z-index: 1;
+}
+
+/* Screen reader only utility (fallback) */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
