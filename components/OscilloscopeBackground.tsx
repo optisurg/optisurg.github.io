@@ -19,6 +19,7 @@ const DEVICE_OFFSET_X = 1.4;
 export default function OscilloscopeBackground() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const scrollProgress = useRef(0);
+  const contentProgress = useRef(0);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -51,11 +52,11 @@ export default function OscilloscopeBackground() {
       metalness: 0.1,
     });
     const bezelMaterial = new THREE.MeshStandardMaterial({
-      color: 0x0b0f0c,
+      color: 0xffffff,
       roughness: 0.45,
       metalness: 0.12,
       emissive: new THREE.Color("#1f6b3f"),
-      emissiveIntensity: 0.28,
+      emissiveIntensity: 0.2,
     });
     const keyboardMaterial = new THREE.MeshStandardMaterial({
       color: 0xcfc6aa,
@@ -80,8 +81,44 @@ export default function OscilloscopeBackground() {
     deviceGroup.add(body);
 
     const bezel = new THREE.Mesh(new THREE.BoxGeometry(3.2, 2.05, 0.5), bezelMaterial);
-    bezel.position.set(0, 0.45, 1.05);
+    bezel.position.set(0, 0.25, 1.05);
     deviceGroup.add(bezel);
+
+    const screenInsetMaterial = new THREE.MeshStandardMaterial({
+      color: 0x8f948a,
+      roughness: 0.55,
+      metalness: 0.05,
+    });
+    const screenInset = new THREE.Mesh(new THREE.BoxGeometry(2.85, 1.75, 0.08), screenInsetMaterial);
+    screenInset.position.set(0, 0.25, 0.95);
+    deviceGroup.add(screenInset);
+
+    const screenCanvas = document.createElement("canvas");
+    screenCanvas.width = 1400;
+    screenCanvas.height = 820;
+    const screenContext = screenCanvas.getContext("2d");
+
+    const screenTexture = new THREE.CanvasTexture(screenCanvas);
+    screenTexture.colorSpace = THREE.SRGBColorSpace;
+    screenTexture.minFilter = THREE.LinearFilter;
+    screenTexture.magFilter = THREE.LinearFilter;
+    screenTexture.wrapS = THREE.ClampToEdgeWrapping;
+    screenTexture.wrapT = THREE.ClampToEdgeWrapping;
+    screenTexture.flipY = true;
+    screenTexture.needsUpdate = true;
+
+    const screenOverlayMaterial = new THREE.MeshBasicMaterial({
+      map: screenTexture,
+      transparent: true,
+      opacity: 0.95,
+      depthTest: false,
+      depthWrite: false,
+      toneMapped: false,
+    });
+    const screenOverlay = new THREE.Mesh(new THREE.PlaneGeometry(2.95, 1.8), screenOverlayMaterial);
+    screenOverlay.position.set(0, 0.25, 1.02);
+    screenOverlay.renderOrder = 20;
+    deviceGroup.add(screenOverlay);
 
     deviceGroup.position.x = DEVICE_OFFSET_X;
 
@@ -168,6 +205,75 @@ export default function OscilloscopeBackground() {
     badge.position.set(1.45, -1.25, 1.05);
     deviceGroup.add(badge);
 
+    const preBootLines = [
+      "ONN CAPSTONE OS V1.2",
+      "COPYRIGHT (C) 2026 TEAM 7",
+      "",
+      "BOOT SEQUENCE: OPTICAL NEURAL NETWORK",
+      "STATUS: PASSIVE 4F LAYER ONLINE",
+      "TARGET: <16MS SEGMENTATION LATENCY",
+      "DATASET: DSAD",
+      "",
+      "SLOGAN: SURGICAL INFERENCE AT THE SPEED OF LIGHT",
+      "",
+    ];
+
+    const renderScreenLabel = (reveal: number, progress: number) => {
+      if (!screenContext) return;
+      screenContext.clearRect(0, 0, screenCanvas.width, screenCanvas.height);
+      screenContext.fillStyle = "#0b3a24";
+      screenContext.fillRect(0, 0, screenCanvas.width, screenCanvas.height);
+
+      screenContext.fillStyle = "#ffffff";
+      screenContext.font = "34px 'IBM Plex Mono', 'Menlo', monospace";
+      screenContext.textAlign = "left";
+      screenContext.textBaseline = "top";
+      screenContext.shadowColor = "rgba(255, 255, 255, 0.6)";
+      screenContext.shadowBlur = 8;
+
+      const paddingX = 64;
+      const paddingY = 70;
+      const lineHeight = 40;
+      const maxLines = preBootLines.length + 2;
+      const lineCount = Math.max(1, Math.min(maxLines, Math.floor(reveal)));
+      const visibleLines = Math.max(3, Math.min(lineCount, preBootLines.length));
+
+      preBootLines.slice(0, visibleLines).forEach((line, index) => {
+        screenContext.fillText(line, paddingX, paddingY + index * lineHeight);
+      });
+
+      if (lineCount > preBootLines.length) {
+        const boxX = paddingX;
+        const boxY = paddingY + (preBootLines.length + 0.6) * lineHeight;
+        const boxWidth = 520;
+        const boxHeight = 74;
+        screenContext.strokeStyle = "#f6f6f6";
+        screenContext.lineWidth = 2;
+        screenContext.strokeRect(boxX, boxY, boxWidth, boxHeight);
+
+        const loadingProgress = THREE.MathUtils.clamp(reveal - (preBootLines.length + 1), 0, 1);
+        const blocks = 17;
+        const blockWidth = (boxWidth - 24) / blocks;
+        const filledBlocks = Math.floor(blocks * loadingProgress);
+        screenContext.fillStyle = "#f6f6f6";
+        for (let i = 0; i < filledBlocks; i += 1) {
+          screenContext.fillRect(boxX + 12 + i * blockWidth, boxY + 42, blockWidth - 4, 12);
+        }
+        screenContext.font = "24px 'IBM Plex Mono', 'Menlo', monospace";
+        screenContext.fillText("LOADING", boxX + 12, boxY + 12);
+
+        if (filledBlocks >= blocks) {
+          screenContext.font = "22px 'IBM Plex Mono', 'Menlo', monospace";
+          screenContext.fillText("READY.", paddingX, boxY + boxHeight + lineHeight * 0.8);
+        }
+      }
+
+      screenContext.shadowBlur = 0;
+      screenTexture.needsUpdate = true;
+    };
+
+    renderScreenLabel(1, 0);
+
     scene.add(deviceGroup);
 
 
@@ -185,15 +291,16 @@ export default function OscilloscopeBackground() {
     );
 
     const startPosition = new THREE.Vector3(5.2, 6.2, 13.5);
-    const endPosition = new THREE.Vector3(DEVICE_OFFSET_X, 0.46, 5.9);
+    const endPosition = new THREE.Vector3(DEVICE_OFFSET_X, 0.36, 5.9);
     const startTarget = new THREE.Vector3(DEVICE_OFFSET_X, 0.35, 0.6);
-    const endTarget = new THREE.Vector3(DEVICE_OFFSET_X, 0.45, 1.05);
+    const endTarget = new THREE.Vector3(DEVICE_OFFSET_X, 0.35, 1.05);
 
     const updateScroll = () => {
       const totalScroll = Math.max(1, window.innerHeight * (SCROLL_MULTIPLIER - 1));
       const zoomScroll = totalScroll * ZOOM_RATIO;
       const rawScroll = window.scrollY;
       scrollProgress.current = THREE.MathUtils.clamp(rawScroll / zoomScroll, 0, 1);
+      contentProgress.current = THREE.MathUtils.clamp((rawScroll - zoomScroll) / (totalScroll - zoomScroll), 0, 1);
     };
 
     const resize = () => {
@@ -218,6 +325,9 @@ export default function OscilloscopeBackground() {
       const target = startTarget.clone().lerp(endTarget, progress);
       camera.lookAt(target);
 
+      const revealProgress = progress < 1 ? 0 : contentProgress.current;
+      const revealLines = 1 + revealProgress * (preBootLines.length + 2);
+      renderScreenLabel(revealLines, revealProgress);
 
       composer.render();
       animationFrame = window.requestAnimationFrame(animate);
@@ -236,6 +346,9 @@ export default function OscilloscopeBackground() {
       window.cancelAnimationFrame(animationFrame);
       bodyMaterial.dispose();
       bezelMaterial.dispose();
+      screenInsetMaterial.dispose();
+      screenOverlayMaterial.dispose();
+      screenTexture.dispose();
       composer.dispose();
       renderer.dispose();
     };
