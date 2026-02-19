@@ -105,7 +105,7 @@ export default function OscilloscopeBackground() {
     {
       title: "Optical Log",
       date: "Sep 16, 2025",
-      body: ["Tracking optical alignment steps.", "", "- Lens spacing calibrated", "- SLM profile loaded"],
+      body: ["Tracking optical alignment steps.", "", "- Lens spacing calibrated", "- DMD profile loaded"],
     },
     {
       title: "Model Notes",
@@ -121,19 +121,12 @@ export default function OscilloscopeBackground() {
   ];
 
   const teamMembers: TeamMember[] = [
-    {
-      name: "Chris George",
-      role: "Testing & Integration Lead",
-      email: "georgc9@mcmaster.ca",
-      blurb: "Owns subsystem tests, integration, and OR handoff plans.",
-      headshot: chrisHeadshot,
-      linkedin: "https://www.linkedin.com/in/cgeorge101/",
-    },
+  
     {
       name: "Saransh Bedi",
       role: "Optical Hardware Co-Lead / Part Sourcing",
       email: "bedis9@mcmaster.ca",
-      blurb: "Qualifies lenses, SLMs, and optics vendors.",
+      blurb: "Qualifies lenses, DMDs, and builds out the DMD networking hardware.",
       headshot: saranshHeadshot,
       linkedin: "https://www.linkedin.com/in/saransh-bedi/",
     },
@@ -145,13 +138,13 @@ export default function OscilloscopeBackground() {
       headshot: jaedinHeadshot,
       linkedin: "https://www.linkedin.com/in/jaedingarces/",
     },
-    {
-      name: "Nabil Johny",
-      role: "ML Pipeline Co-Lead",
-      email: "johnyn@mcmaster.ca",
-      blurb: "Builds the segmentation + TorchOptics pipeline.",
-      headshot: nabilHeadshot,
-      linkedin: "https://www.linkedin.com/in/nabil-johny/",
+      {
+      name: "Chris George",
+      role: "Testing & Integration Lead",
+      email: "georgc9@mcmaster.ca",
+      blurb: "Owns subsystem tests and coordinates hardware-software integration.",
+      headshot: chrisHeadshot,
+      linkedin: "https://www.linkedin.com/in/cgeorge101/",
     },
     {
       name: "Jonathan Jiang",
@@ -161,6 +154,15 @@ export default function OscilloscopeBackground() {
       headshot: jonnyHeadshot,
       linkedin: "https://www.linkedin.com/in/jonathanrsjiang/",
     },
+    {
+      name: "Nabil Johny",
+      role: "ML Pipeline Co-Lead",
+      email: "johnyn@mcmaster.ca",
+      blurb: "Builds the segmentation + TorchOptics pipeline.",
+      headshot: nabilHeadshot,
+      linkedin: "https://www.linkedin.com/in/nabil-johny/",
+    },
+
   ];
 
   useEffect(() => {
@@ -914,7 +916,7 @@ export default function OscilloscopeBackground() {
       drawInfoBox(leftX, boxTop, boxW, boxH, "Hardware Stack", [
         "Surgical camera (60 FPS)",
         "Frame grabber IO",
-        "4F lens pair + SLM",
+        "4F lens pair + DMD",
         "CMOS capture sensor",
         "Existing OR display path",
       ]);
@@ -943,7 +945,7 @@ export default function OscilloscopeBackground() {
       screenContext.font = "13px Geneva, 'IBM Plex Mono', 'Menlo', monospace";
       screenContext.fillText("[x] Feature detail survives optical pass", panelX + 12, checklistY + 38);
       screenContext.fillText("[x] No retraining required downstream", panelX + 12, checklistY + 62);
-      screenContext.fillText("[ ] Hardware build + clinical testing", panelX + 12, checklistY + 86);
+      screenContext.fillText("[ ] Hardware build + clinical output", panelX + 12, checklistY + 86);
 
       screenTexture.needsUpdate = true;
     };
@@ -1049,7 +1051,7 @@ export default function OscilloscopeBackground() {
       screenContext.fillText("Directory", headerX + 14, headerY + 24);
       screenContext.font = "12px Geneva, 'IBM Plex Mono', 'Menlo', monospace";
       screenContext.fillStyle = "#464138";
-      screenContext.fillText("Double-click a card or email to reach us.", headerX + 14, headerY + 40);
+      screenContext.fillText("Contact us!", headerX + 14, headerY + 40);
 
       const tableTop = headerY + headerH + 20;
       const tableBottom = directoryY + directoryH - 18;
@@ -1684,7 +1686,7 @@ export default function OscilloscopeBackground() {
         <div style={{ marginBottom: "10px", fontSize: "14px" }}>Pipeline</div>
         <div>Camera -&gt; Frame Grabber -&gt; 4F Optics -&gt; CNN -&gt; Overlay</div>
         <div style={{ marginTop: "12px", fontSize: "14px" }}>Hardware</div>
-        <div>- Lens pair + SLM + CMOS sensor</div>
+        <div>- Lens pair + DMD + CMOS sensor</div>
         <div>- Existing OR monitor path</div>
         <div style={{ marginTop: "12px", fontSize: "14px" }}>Software</div>
         <div>- TorchOptics + kernel constraints</div>
