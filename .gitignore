@@ -16,3 +16,6 @@ coverage/
 .vscode/
 *.swp
 *.swo
+
+.DS_Store
+tsconfig.tsbuildinfo
