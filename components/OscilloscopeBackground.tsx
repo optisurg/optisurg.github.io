@@ -43,7 +43,7 @@ const SYS7_THEME = {
   link: "#0b3e9e",
 };
 
-type DesktopIconKey = "team" | "setup" | "writing";
+type DesktopIconKey = "team" | "setup" | "writing" | "about";
 
 type TeamMember = {
   name: string;
@@ -70,18 +70,19 @@ export default function OscilloscopeBackground() {
   const maxRevealProgress = useRef(0);
   const bootCompleteTime = useRef<number | null>(null);
   const desktopFadeStart = useRef<number | null>(null);
-  const appState = useRef<"boot" | "desktop" | "team" | "setup" | "writing">("boot");
+  const appState = useRef<"boot" | "desktop" | "team" | "setup" | "writing" | "about">("boot");
   const transitionState = useRef<{ from: string; to: string; start: number } | null>(null);
   const noteIndex = useRef(0);
   const iconHitAreas = useRef<{ label: string; x: number; y: number; width: number; height: number }[]>([]);
   const contactHitAreas = useRef<ContactHitArea[]>([]);
   const headshotCache = useRef<Record<string, HTMLImageElement | null>>({});
   const groupPhotoCache = useRef<HTMLImageElement | null>(null);
+  const scrollHintRef = useRef<HTMLDivElement | null>(null);
   const isMobile = useRef(false);
   const tapStep = useRef(0);
   const lastTapTime = useRef(0);
   const [isMobileLayout, setIsMobileLayout] = useState(false);
-  const [mobileWindow, setMobileWindow] = useState<"desktop" | "team" | "setup" | "writing">("desktop");
+  const [mobileWindow, setMobileWindow] = useState<"desktop" | "team" | "setup" | "writing" | "about">("desktop");
 
   const preBootLines = [
     "ONN CAPSTONE OS V1.2",
@@ -118,6 +119,7 @@ export default function OscilloscopeBackground() {
     { key: "team", label: "Team" },
     { key: "setup", label: "Setup" },
     { key: "writing", label: "Writing" },
+    { key: "about", label: "About" },
   ];
 
   const teamMembers: TeamMember[] = [
@@ -663,6 +665,19 @@ export default function OscilloscopeBackground() {
         screenContext.fillStyle = "#6f8cb5";
         screenContext.fillRect(innerX + 18, innerY + 27, innerW - 24, 3);
       }
+
+      if (key === "about") {
+        screenContext.fillStyle = "#fbf9f3";
+        screenContext.fillRect(innerX + 4, innerY + 4, innerW - 8, innerH - 8);
+        screenContext.strokeStyle = "#7f7a70";
+        screenContext.strokeRect(innerX + 4, innerY + 4, innerW - 8, innerH - 8);
+        screenContext.fillStyle = "#7f7a70";
+        screenContext.fillRect(innerX + 16, innerY + 10, 8, 3);
+        screenContext.fillRect(innerX + 18, innerY + 15, 4, 11);
+        screenContext.beginPath();
+        screenContext.arc(innerX + 20, innerY + 31, 2.4, 0, Math.PI * 2);
+        screenContext.fill();
+      }
     };
 
     const renderDesktopScreen = (fade: number) => {
@@ -950,6 +965,50 @@ export default function OscilloscopeBackground() {
       screenTexture.needsUpdate = true;
     };
 
+    const renderAboutWindow = () => {
+      if (!screenContext) return;
+      const frame = renderWindowFrame("About App");
+      const panelX = 24;
+      const panelY = frame.contentTop;
+      const panelW = screenCanvas.width - 48;
+      const panelH = screenCanvas.height - frame.contentTop - 24;
+
+      screenContext.fillStyle = SYS7_THEME.panel;
+      screenContext.fillRect(panelX, panelY, panelW, panelH);
+      screenContext.strokeStyle = SYS7_THEME.panelBorder;
+      screenContext.lineWidth = 2;
+      screenContext.strokeRect(panelX, panelY, panelW, panelH);
+
+      const titleX = panelX + 24;
+      const titleY = panelY + 22;
+      screenContext.fillStyle = SYS7_THEME.text;
+      screenContext.font = "20px Geneva, 'IBM Plex Mono', 'Menlo', monospace";
+      screenContext.textAlign = "left";
+      screenContext.textBaseline = "top";
+      screenContext.fillText("OptiSurg: Surgical Inference at Light Speed", titleX, titleY);
+
+      const lines = [
+        "Idea:",
+        "Insert a passive optical 4F layer ahead of the CNN so edge-like features are",
+        "computed in hardware before digital inference begins.",
+        "",
+        "Why it matters:",
+        "- Lower latency overlays in the OR",
+        "- Preserve downstream model pipeline",
+        "- Reduce compute burden on digital hardware",
+        "",
+        "Capstone objective:",
+        "Ship a bench-ready hybrid prototype and validate segmentation quality retention.",
+      ];
+      screenContext.font = "14px Geneva, 'IBM Plex Mono', 'Menlo', monospace";
+      screenContext.fillStyle = SYS7_THEME.textMuted;
+      lines.forEach((line, index) => {
+        screenContext.fillText(line, titleX, titleY + 42 + index * 24);
+      });
+
+      screenTexture.needsUpdate = true;
+    };
+
     const renderTeamWindow = () => {
       if (!screenContext) return;
       const frame = renderWindowFrame("Team + Contact");
@@ -1219,6 +1278,11 @@ export default function OscilloscopeBackground() {
       const rawScroll = window.scrollY;
       scrollProgress.current = THREE.MathUtils.clamp(rawScroll / zoomScroll, 0, 1);
       contentProgress.current = THREE.MathUtils.clamp((rawScroll - zoomScroll) / (totalScroll - zoomScroll), 0, 1);
+
+      if (scrollHintRef.current) {
+        const hintOpacity = 1 - THREE.MathUtils.clamp(scrollProgress.current * 2.2, 0, 1);
+        scrollHintRef.current.style.opacity = hintOpacity.toFixed(2);
+      }
     };
 
     const resize = () => {
@@ -1309,6 +1373,9 @@ export default function OscilloscopeBackground() {
       if (appState.current === "writing") {
         renderWritingWindow();
       }
+      if (appState.current === "about") {
+        renderAboutWindow();
+      }
       }
 
       composer.render();
@@ -1348,7 +1415,7 @@ export default function OscilloscopeBackground() {
       );
       if (hit) {
         const target = hit.label.toLowerCase();
-        if (target === "team" || target === "setup" || target === "writing") {
+        if (target === "team" || target === "setup" || target === "writing" || target === "about") {
           appState.current = target as typeof appState.current;
         }
       }
@@ -1473,14 +1540,24 @@ export default function OscilloscopeBackground() {
           </svg>
         );
       }
+      if (key === "writing") {
+        return (
+          <svg viewBox="0 0 54 54" width="54" height="54" aria-hidden="true">
+            <rect x="12" y="9" width="30" height="36" fill="#fcfbf7" stroke="#7f7a70" strokeWidth="2" />
+            <polygon points="42,9 47,14 42,19" fill="#ddd7cb" />
+            <rect x="16" y="21" width="20" height="2" fill="#8b857d" />
+            <rect x="16" y="26" width="20" height="2" fill="#8b857d" />
+            <rect x="16" y="31" width="16" height="2" fill="#8b857d" />
+            <rect x="22" y="36" width="14" height="3" fill="#6f8cb5" />
+          </svg>
+        );
+      }
       return (
         <svg viewBox="0 0 54 54" width="54" height="54" aria-hidden="true">
-          <rect x="12" y="9" width="30" height="36" fill="#fcfbf7" stroke="#7f7a70" strokeWidth="2" />
-          <polygon points="42,9 47,14 42,19" fill="#ddd7cb" />
-          <rect x="16" y="21" width="20" height="2" fill="#8b857d" />
-          <rect x="16" y="26" width="20" height="2" fill="#8b857d" />
-          <rect x="16" y="31" width="16" height="2" fill="#8b857d" />
-          <rect x="22" y="36" width="14" height="3" fill="#6f8cb5" />
+          <rect x="11" y="10" width="32" height="34" fill="#fbf9f3" stroke="#7f7a70" strokeWidth="2" />
+          <rect x="24" y="17" width="6" height="3" fill="#7f7a70" />
+          <rect x="25" y="22" width="4" height="11" fill="#7f7a70" />
+          <circle cx="27" cy="37" r="2.5" fill="#7f7a70" />
         </svg>
       );
     };
@@ -1712,12 +1789,29 @@ export default function OscilloscopeBackground() {
       </div>
     );
 
+    const aboutContent = (
+      <div style={{ fontSize: "13px", lineHeight: 1.6, color: SYS7_THEME.text }}>
+        <div style={{ marginBottom: "10px", fontSize: "14px" }}>OptiSurg App Vision</div>
+        <div>
+          This app presents our capstone concept: combining passive optical feature extraction with a standard CNN
+          to accelerate surgical scene segmentation.
+        </div>
+        <div style={{ marginTop: "12px", fontSize: "14px" }}>Core Idea</div>
+        <div>- Use a 4F optical layer to pre-compute edge-like features in hardware.</div>
+        <div>- Feed those features into the existing digital segmentation stack.</div>
+        <div style={{ marginTop: "12px", fontSize: "14px" }}>Target Outcome</div>
+        <div>- Lower end-to-end inference latency for real-time OR overlays.</div>
+        <div>- Preserve segmentation quality while reducing digital compute pressure.</div>
+      </div>
+    );
+
     return (
       <div style={{ fontFamily: "Geneva, 'IBM Plex Mono', 'Menlo', monospace" }}>
         {mobileWindow === "desktop" && desktopView}
         {mobileWindow === "team" && windowFrame("Team", teamContent)}
         {mobileWindow === "setup" && windowFrame("Setup", setupContent)}
         {mobileWindow === "writing" && windowFrame("Writing", writingContent)}
+        {mobileWindow === "about" && windowFrame("About", aboutContent)}
       </div>
     );
   }
@@ -1727,6 +1821,30 @@ export default function OscilloscopeBackground() {
       <div className="oscilloscope-stage">
         <canvas ref={canvasRef} className="oscilloscope-canvas" aria-hidden="true" />
         <div className="oscilloscope-overlay" aria-hidden="true" />
+        <div
+          ref={scrollHintRef}
+          aria-hidden="true"
+          style={{
+            position: "fixed",
+            left: "50%",
+            bottom: "30px",
+            transform: "translateX(-50%)",
+            background: "rgba(246, 241, 228, 0.95)",
+            border: `2px solid ${SYS7_THEME.chromeBorder}`,
+            boxShadow: "3px 3px 0 rgba(0,0,0,0.22)",
+            color: SYS7_THEME.text,
+            fontFamily: "Geneva, 'IBM Plex Mono', 'Menlo', monospace",
+            fontSize: "13px",
+            padding: "8px 12px",
+            letterSpacing: "0.2px",
+            pointerEvents: "none",
+            zIndex: 20,
+            transition: "opacity 180ms ease-out",
+            opacity: 1,
+          }}
+        >
+          Scroll to zoom in
+        </div>
       </div>
       <div className="scroll-spacer" aria-hidden="true" />
     </>
